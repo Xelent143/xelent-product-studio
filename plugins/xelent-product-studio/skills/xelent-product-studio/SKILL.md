@@ -47,6 +47,13 @@ This skill generates images and submits listings **only through Xelent API** (xe
    (`marketplaces.etsy.disclose_ai`). Explain the trade-off in two sentences (Etsy's rules require disclosing AI
    use; not disclosing risks listing removal) and record their choice. Alibaba listings present the product as the
    design and never talk about how images were made.
+4. Ask which resolution they want the photos in, with the price per image on their own account
+   (`node <skill>/scripts/xelent.mjs prices`):
+   - **2K**: Nano Banana 2. Cheaper and faster.
+   - **4K**: GPT Image 2.5 Sunburst. Larger, more detailed photos; costs more per image.
+   Marketplace uploads are 1600 to 2000 px either way; 4K gives bigger masters for print, a website or zoom.
+   Record the answer: `python3 <skill>/scripts/studio.py set-resolution --dir <workspace> 2K` (or `4K`).
+   Never pick for them; `run.mjs` refuses to start until this is set. They can change it later the same way.
 
 ## 1. Research: learn the industry first
 
@@ -73,7 +80,24 @@ with `view_details`, fabric, gsm, fit, sizes, colourways, decoration and a size 
 python3 <skill>/scripts/studio.py check-designs --dir <workspace>
 ```
 
-Tell the user how many images the next stages will cost (see [references/image-direction.md](references/image-direction.md)).
+Tell the user roughly how many images and credits the next stages will take at their resolution (see
+[references/image-direction.md](references/image-direction.md)).
+
+## Credits: before and after every generation
+
+Every time you are about to run `run.mjs` (sheets, views, extras, and every redo), first run
+
+```bash
+node <skill>/scripts/run.mjs --dir <workspace> --quote
+```
+
+and tell the user in one line what it prints: how many images, at which resolution and model, credits per image,
+the total, their balance now and after. Example: "This makes 12 images at 4K (GPT Image 2.5 Sunburst), 10 credits
+each: 120 credits. You have 850; about 730 will be left." If it says `NOT ENOUGH`, stop and send them to
+https://xelentapi.com/dashboard/billing instead of starting.
+
+When the run finishes, it prints a `CREDITS:` line. Tell the user how many credits the job used and how many are
+left, e.g. "Done: 12 images, 120 credits used, 730 credits left." Use those printed numbers, not your estimate.
 
 ## 3. Concept sheets (one image per product, every view side by side)
 
@@ -93,7 +117,7 @@ python3 <skill>/scripts/approve.py --dir <workspace> --ids <id> <id>            
 python3 <skill>/scripts/approve.py --dir <workspace> --changes <id> "their note" # revise (then plan + run again)
 ```
 
-## 4. Views (2K, one per angle, from the approved sheet)
+## 4. Views (one per angle, at the chosen resolution, from the approved sheet)
 
 ```bash
 python3 <skill>/scripts/plan.py  --dir <workspace> --stage views
@@ -161,6 +185,6 @@ link; never activate or publish a listing live.
 
 `python3 <skill>/scripts/studio.py status --dir <workspace>` summarises where things stand. For questions about
 cost or charges, use the user's own records: `node <skill>/scripts/xelent.mjs jobs` and `xelent.mjs ledger`
-(details in references/xelent-api.md). On long runs,
+(details in references/xelent-api.md); `xelent.mjs prices` shows the balance and per-image price. On long runs,
 `node <skill>/scripts/run.mjs --dir <workspace> --status` counts finished images; give a status line every few
 minutes. `run.mjs` keeps a ledger, so a re-run after a crash never pays twice.

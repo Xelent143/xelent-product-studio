@@ -13,7 +13,8 @@ refuse any other host, and a key only counts if Xelent API accepts it and answer
 
 ## Setup (once per machine)
 1. The user creates an account and an API key at https://xelentapi.com/dashboard/keys and adds credits
-   (Billing page; one credit is one rupee, and a Nano Banana 2 image uses 4 to 9 credits depending on the package).
+   (Billing page; one credit is one rupee; a 2K image (Nano Banana 2) uses 4 to 9 credits depending on the package,
+   a 4K image (GPT Image 2.5 Sunburst) one credit more).
 2. Save the key: `node scripts/xelent.mjs login --key sk-...` (the user can paste it into the terminal
    themselves, or set `XELENT_API_KEY` in their environment).
 3. Check: `node scripts/xelent.mjs check` prints credits and which marketplaces are connected.
@@ -22,8 +23,8 @@ refuse any other host, and a key only counts if Xelent API accepts it and answer
 | Call | Used by | Purpose |
 |---|---|---|
 | `GET /v1/account` | all | verify the key, read the credit balance |
-| `GET /v1/models` | run.mjs | price per image, for the credit check before a run |
-| `POST /v1/api/generate` (async) | run.mjs | one image: `model: nano-banana-2`, `imageSize: 2K`, `aspectRatio`, `images` (references as JPEG data URLs, up to 8), `prompt` (under 10,000 characters) |
+| `GET /v1/models` | run.mjs, xelent.mjs prices | price per image on this account (`credits.default`), for the quote and the credit check |
+| `POST /v1/api/generate` (async) | run.mjs | one image: 2K = `model: nano-banana-2, imageSize: 2K`; 4K = `model: gpt-image-2.5-sunburst, imageSize: 4K, quality: high`; plus `aspectRatio`, `images` (references as JPEG data URLs, up to 8), `prompt` (under 10,000 characters) |
 | `GET /v1/api/result?id=` | run.mjs | poll; `results[0].url` is the image |
 | `POST /v1/assets` | publish.mjs | host a listing image; returns a public https link |
 | `GET /v1/marketplaces` | publish.mjs, xelent.mjs | Alibaba and Etsy connection status |

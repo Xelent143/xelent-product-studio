@@ -6,7 +6,7 @@ draws every final photograph from that approved sheet. Extras (detail, flat lay,
 drawn from the sheet **and** the finished front and back photographs, so they inherit the approved look.
 
 ```
-studio.json products ──► sheets (1 image per product) ──► user approves ──► views (1 per angle, 2K)
+studio.json products ──► sheets (1 image per product) ──► user approves ──► views (1 per angle, 2K or 4K)
                                                                               └─► extras (detail, flat lay,
                                                                                   lifestyle, colourways)
 size_chart.py draws the size chart; nothing numeric is ever generated.
@@ -70,8 +70,16 @@ exactly (colours, panels, logos, fit) and nothing else in the scene carries a br
   if it still happens, add the facing direction to that view's `view_details`.
 
 ## Cost
-Each image is one Nano Banana 2 job at 2K. On Xelent API one credit is one rupee, and a Nano Banana 2 image uses
-4 to 9 credits depending on the package the user's credits came from; `run.mjs` reads the account's current price
-from Xelent API and checks the balance before it starts. A product with 4 views, all extras and 3 colourways is about
-1 sheet + 4 views + 3 extras + 2 colourways = 10 images, plus revisions. Tell the user the image count and the
-credits (`run.mjs` prints both) before each stage.
+Each image is one job at the resolution the user chose (`generation.resolution` in studio.json):
+
+| Resolution | Model | Credits per image (1 credit = 1 PKR) |
+|---|---|---|
+| 2K | Nano Banana 2 | 4 to 9, depending on the package the credits came from |
+| 4K | GPT Image 2.5 Sunburst (quality high) | the 2K price + 1 |
+
+The exact price on the user's account: `node scripts/xelent.mjs prices`. A product with 4 views, all extras and
+3 colourways is about 1 sheet + 4 views + 3 extras + 2 colourways = 10 images, plus revisions.
+
+Before each stage run `run.mjs --quote` and tell the user the images, credits per image, total and balance after;
+`run.mjs` also refuses to start when the balance or the key's spending limit is too low. After each stage tell the
+user the credits used and the balance left from the `CREDITS:` line `run.mjs` prints.

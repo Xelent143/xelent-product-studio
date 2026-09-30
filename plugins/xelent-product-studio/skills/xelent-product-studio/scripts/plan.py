@@ -6,7 +6,7 @@
   plan.py --dir D --stage extras  [--only ID ...] [--redo NAME ...]
 
 sheets  one concept sheet per product that is not approved yet: every view of the same product side by side.
-views   approved products only: one 2K photograph per view, each drawn from the approved sheet.
+views   approved products only: one photograph per view (at the chosen 2K or 4K), each drawn from the approved sheet.
 extras  after the views exist: detail close-up, flat lay, on-body lifestyle and one front per extra colourway,
         each drawn from the approved sheet plus the finished front (and back) view, so they cannot drift.
 

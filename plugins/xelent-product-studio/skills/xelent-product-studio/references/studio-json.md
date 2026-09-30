@@ -29,6 +29,17 @@ it and re-run the step to change anything. Facts in listings come from here and 
 `background`: `white` (default; Alibaba's main image needs white) or `grey`. `notes`: one or two sentences of house
 style added to every image prompt.
 
+## generation
+`resolution`: `"2K"` or `"4K"`, the user's answer to "which resolution?" (set it with `studio.py set-resolution`,
+never guess). It picks the model for every image in the workspace:
+
+| Resolution | Model | Output |
+|---|---|---|
+| `2K` | Nano Banana 2 | about 2048 px on the long side |
+| `4K` | GPT Image 2.5 Sunburst, quality `high` | 2880 x 2880 square, 3840 px wide for boards |
+
+`run.mjs` refuses to start while it is `null`. The price per image is on the user's account (`node xelent.mjs prices`).
+
 ## marketplaces
 `alibaba`: `enabled`, `currency`, `unit`, `place_of_origin`, `image_order` (null for the default),
 `xlsx` defaults for the spreadsheet (`shipping_template`, `lead_times` `[{qty, days}]`, `gross_weight_kg`, `dimensions_cm`).

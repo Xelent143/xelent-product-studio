@@ -26,6 +26,9 @@
   "background": "white",
   "notes": ""
  },
+ "generation": {
+  "resolution": null
+ },
  "marketplaces": {
   "alibaba": {
    "enabled": true,

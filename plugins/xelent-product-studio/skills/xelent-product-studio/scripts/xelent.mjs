@@ -7,6 +7,7 @@
 //   node xelent.mjs marketplaces                 which marketplaces are connected
 //   node xelent.mjs etsy-reference               Etsy shipping / processing / return / partner ids for listings
 //   node xelent.mjs etsy-taxonomy "hoodies"      search Etsy category ids
+//   node xelent.mjs prices                       per-image credits at 2K and 4K on this account, and the balance
 //   node xelent.mjs jobs [--status failed] [--q text] [--from YYYY-MM-DD] [--to YYYY-MM-DD]   job history and totals
 //   node xelent.mjs ledger [--from YYYY-MM-DD] [--to YYYY-MM-DD]   credit ledger: every credit in and out, and whether it adds up
 //
@@ -97,9 +98,10 @@ export async function verifyKey(key) {
 // ---------------------------------------------------------------------------
 
 /** Submits one generation in async mode and returns the Xelent generation id. */
-export async function submitGeneration({ model, prompt, aspectRatio, imageSize, images }) {
+export async function submitGeneration({ model, prompt, aspectRatio, imageSize, quality, images }) {
   const body = { model, prompt, aspectRatio, replyType: "async" };
   if (imageSize) body.imageSize = imageSize;
+  if (quality) body.quality = quality;
   if (images?.length) body.images = images;
   const r = await xelent("/v1/api/generate", { method: "POST", body, timeout: 180_000 });
   if (!r.id) throw new XelentError(`No generation id: ${JSON.stringify(r).slice(0, 200)}`, 502, "no_id");
@@ -165,6 +167,16 @@ async function cli() {
     return;
   }
   if (cmd === "marketplaces") return console.log(JSON.stringify(await marketplaces(), null, 1));
+  if (cmd === "prices") {
+    const [acct, models] = await Promise.all([verifyKey(), xelent("/v1/models")]);
+    const price = (id) => models.data?.find((m) => m.id === id)?.credits?.default;
+    const nb2 = price("nano-banana-2");
+    const sun = price("gpt-image-2.5-sunburst");
+    console.log(`2K (Nano Banana 2): ${nb2 ?? "not available"} credits per image`);
+    console.log(`4K (GPT Image 2.5 Sunburst): ${sun ?? "not available"} credits per image`);
+    console.log(`Balance: ${acct.balance_credits} credits (1 credit = 1 PKR). Prices depend on the package the credits came from.`);
+    return;
+  }
   if (cmd === "jobs" || cmd === "ledger") {
     const q = new URLSearchParams();
     for (const f of ["status", "q", "from", "to", "model", "key"]) if (arg(`--${f}`)) q.set(f, arg(`--${f}`));
@@ -180,7 +192,7 @@ async function cli() {
   }
   if (cmd === "etsy-reference") return console.log(JSON.stringify(await xelent("/v1/marketplaces/etsy/reference"), null, 1));
   if (cmd === "etsy-taxonomy") return console.log(JSON.stringify(await xelent(`/v1/marketplaces/etsy/taxonomy?q=${encodeURIComponent(rest.join(" "))}`), null, 1));
-  console.log(readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 13).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
+  console.log(readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 14).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

@@ -15,7 +15,7 @@ your Xelent account.
 2. **Designs from the research.** Complete, makeable designs using only the decoration methods your factory runs,
    checked for balance, manufacturability and IP problems.
 3. **Photographs each design consistently.** One concept sheet per product shows every view side by side; after you
-   approve it, each view is generated from that sheet at 2K, then detail, flat-lay, lifestyle and colourway images
+   approve it, each view is generated from that sheet at the resolution you chose (2K or 4K), then detail, flat-lay, lifestyle and colourway images
    from the finished views. Size charts are typeset, never generated.
 4. **Writes listings buyers find.** Alibaba titles, 15+ keyword phrases, attributes and sectioned descriptions; Etsy
    titles, 13 tags and phone-friendly descriptions, all from the research keyword bank and checked against each
@@ -72,9 +72,16 @@ Ask Claude in plain words, for example:
 
 ## Cost
 
-Every image is one Nano Banana 2 job, which uses 4 to 9 credits (rupees) depending on the package your credits
-came from. A product with four views, three extras and two extra colourways is about 10 images, plus any revisions.
-Claude tells you the image count and the credits before each generation stage.
+Claude asks once which resolution you want:
+
+| Resolution | Model | Credits (rupees) per image |
+|---|---|---|
+| 2K | Nano Banana 2 | 4 to 9, depending on the package your credits came from |
+| 4K | GPT Image 2.5 Sunburst | the 2K price + 1 |
+
+A product with four views, three extras and two extra colourways is about 10 images, plus any revisions. Before
+each generation stage Claude tells you how many images it will make, the credits it will use and what your balance
+will be after; when the stage finishes it tells you the credits actually used and the credits left.
 
 ## Notes on marketplace rules
 

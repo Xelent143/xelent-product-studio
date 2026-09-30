@@ -1,7 +1,11 @@
 #!/usr/bin/env node
-// Execute <dir>/jobs.json on Xelent API (nano-banana-2 at 2K). Safe to stop and re-run at any time.
-//   node run.mjs --dir D [--concurrency 6] [--size 2K]
-//   node run.mjs --dir D --status
+// Execute <dir>/jobs.json on Xelent API at the resolution the user chose (studio.json generation.resolution):
+//   2K -> Nano Banana 2 at 2K        4K -> GPT Image 2.5 Sunburst at 4K (high quality)
+// Safe to stop and re-run at any time.
+//   node run.mjs --dir D --quote       what this stage will cost and the balance after; generates nothing
+//   node run.mjs --dir D               generate, then report the credits used and the balance left
+//   node run.mjs --dir D --status      progress only
+//   options: --concurrency 6   --resolution 2K|4K (overrides studio.json for this run)
 // A job is done when its output file exists. Every generation id is written to <dir>/ledger.json before anything
 // else, so a re-run polls generations already submitted instead of paying for them again. References go up as
 // 1600px JPEG copies (<dir>/refs): full-size PNGs are several MB and time out on a slow uplink.
@@ -14,8 +18,27 @@ import { apiBase, verifyKey, submitGeneration, generationResult, xelent, XelentE
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(n); return i > -1 && argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[i + 1] : d; };
 const D = resolve(arg("--dir", "."));
-const MODEL = "nano-banana-2";
-const SIZE = arg("--size", "2K");
+// The user picks the resolution once (studio.py set-resolution); each maps to one model.
+const PROFILES = {
+  "2K": { model: "nano-banana-2", imageSize: "2K", label: "Nano Banana 2 at 2K" },
+  "4K": { model: "gpt-image-2.5-sunburst", imageSize: "4K", quality: "high", label: "GPT Image 2.5 Sunburst at 4K" },
+};
+const studioFile = join(D, "studio.json");
+const chosen = arg("--resolution") ?? (existsSync(studioFile) ? JSON.parse(readFileSync(studioFile, "utf8")).generation?.resolution : null);
+if (chosen && !PROFILES[chosen]) {
+  console.error(`Resolution must be 2K or 4K, not "${chosen}".`);
+  process.exit(4);
+}
+if (!argv.includes("--status") && !PROFILES[chosen]) {
+  console.error(
+    "No resolution chosen yet. Ask the user: 2K (Nano Banana 2) or 4K (GPT Image 2.5 Sunburst)? " +
+      "Show them each price with `node xelent.mjs prices`, then record the answer: python3 studio.py set-resolution --dir <workspace> 2K|4K",
+  );
+  process.exit(4);
+}
+const PROFILE = PROFILES[chosen] ?? PROFILES["2K"];
+const MODEL = PROFILE.model;
+const SIZE = PROFILE.imageSize;
 const CONC = +arg("--concurrency", "6");
 const MAX_TRIES = 4, MAX_NET = 8, STALE_MIN = 20, POLL_MS = 8000;
 
@@ -66,7 +89,7 @@ async function submit(j) {
   const at = new Date().toISOString();
   try {
     const images = (j.refs || []).map((r) => "data:image/jpeg;base64," + readFileSync(small(r)).toString("base64"));
-    const id = await submitGeneration({ model: MODEL, prompt: j.prompt, aspectRatio: j.aspect || "1:1", imageSize: SIZE, images });
+    const id = await submitGeneration({ model: MODEL, prompt: j.prompt, aspectRatio: j.aspect || "1:1", imageSize: SIZE, quality: PROFILE.quality, images });
     ledger[j.name].attempts.push({ id, at, status: "pending", model: MODEL, size: SIZE });
     log("submitted", j.name);
   } catch (e) {
@@ -94,7 +117,7 @@ async function poll(j) {
       mkdirSync(dirname(j.out), { recursive: true });
       writeFileSync(j.out + ".part", Buffer.from(await img.arrayBuffer()));
       renameSync(j.out + ".part", j.out);
-      a.status = "succeeded"; a.url = url; a.credits = r.credits_used; log("done", j.name);
+      a.status = "succeeded"; a.url = url; a.credits = r.credits_used; a.doneAt = new Date().toISOString(); log("done", j.name);
     } else if (r.status === "failed" || r.status === "violation") {
       a.status = r.status; a.reason = r.error || "unknown"; log(r.status.toUpperCase(), j.name, a.reason);
     } else if (Date.now() - Date.parse(a.at) > STALE_MIN * 60_000) {
@@ -108,13 +131,33 @@ async function pool(items, n, fn) { const q = [...items]; await Promise.all(Arra
 
 // Before paying for anything: the key must be a Xelent API key with enough credits for what is left to do.
 const todo = JOBS.filter((j) => !done(j));
-if (!todo.length) { log("nothing to generate: every output is already on disk"); process.exit(0); }
+if (!todo.length) { log(argv.includes("--quote") ? "QUOTE: 0 images, 0 credits: every output is already on disk." : "nothing to generate: every output is already on disk"); process.exit(0); }
 const acct = await verifyKey().catch((e) => { console.error(`Xelent API: ${e.message}`); process.exit(1); });
 const models = await xelent("/v1/models").catch(() => ({ data: [] }));
-const price = models.data?.find((m) => m.id === MODEL)?.credits?.[SIZE] ?? models.data?.find((m) => m.id === MODEL)?.credits?.default ?? 1;
+const listed = models.data?.find((m) => m.id === MODEL);
+if (!listed) {
+  console.error(`${PROFILE.label} is not available on this Xelent API account right now. Ask the user to choose the other resolution (studio.py set-resolution).`);
+  process.exit(4);
+}
+const price = listed.credits?.default ?? listed.credits?.[SIZE] ?? 1;
 const unsubmitted = todo.filter((j) => last(j)?.status !== "pending").length;
 const need = +(unsubmitted * price).toFixed(2);
-log(`Xelent API ${apiBase()}: ${acct.balance_credits} credits available; ${todo.length} images to make (${unsubmitted} new, about ${need} credits).`);
+const after = +(acct.balance_credits - need).toFixed(2);
+if (argv.includes("--quote")) {
+  console.log(
+    `QUOTE: ${unsubmitted} image${unsubmitted === 1 ? "" : "s"} with ${PROFILE.label} at ${price} credits each = ${need} credits. ` +
+      `Balance now ${acct.balance_credits} credits` + (after >= 0 ? `; about ${after} after this stage.` : ".") +
+      (todo.length > unsubmitted ? ` (${todo.length - unsubmitted} more already running from an earlier start, already paid for.)` : ""),
+  );
+  if (after < 0) console.log(`NOT ENOUGH: ${+(need - acct.balance_credits).toFixed(2)} more credits are needed. Top up at https://xelentapi.com/dashboard/billing.`);
+  const capLeft = acct.key?.spend_limit_credits == null ? null : +(acct.key.spend_limit_credits - (acct.key.spent_credits ?? 0)).toFixed(2);
+  if (capLeft !== null && capLeft < need) {
+    console.log(`NOT ENOUGH ON THE KEY: the key "${acct.key.name}" has ${capLeft} credits of its spending limit left. Raise the limit to at least ${Math.ceil((acct.key.spent_credits ?? 0) + need)} or remove it at https://xelentapi.com/dashboard/keys.`);
+  }
+  process.exit(0);
+}
+log(`Xelent API ${apiBase()}: ${acct.balance_credits} credits available; ${todo.length} images to make with ${PROFILE.label} (${unsubmitted} new, about ${need} credits).`);
+const startedAt = new Date().toISOString();
 if (acct.balance_credits < need) {
   console.error(`Not enough credits: ${need} needed, ${acct.balance_credits} available. Top up at https://xelentapi.com/dashboard/billing or run fewer products (plan.py --only).`);
   process.exit(3);
@@ -153,4 +196,12 @@ for (;;) {
 }
 const s = status();
 log(`FINISHED ${s.done}/${s.total}` + (s.missing.length ? `; missing: ${s.missing.join(", ")}` : ""));
+// What this run cost (failed and refused images are never charged) and what is left.
+const madeNow = JOBS.flatMap((j) => ledger[j.name].attempts).filter((a) => a.status === "succeeded" && a.doneAt >= startedAt);
+const used = +madeNow.reduce((sum, a) => sum + (a.credits ?? price), 0).toFixed(2);
+const now = await verifyKey().catch(() => null);
+console.log(
+  `CREDITS: this run used ${used} credits for ${madeNow.length} image${madeNow.length === 1 ? "" : "s"}` +
+    (now ? `. Balance left: ${now.balance_credits} credits` + (now.held_credits ? ` (${now.held_credits} more are on hold for images still finishing, refunded if they fail)` : "") + "." : "."),
+);
 process.exit(s.missing.length ? 2 : 0);

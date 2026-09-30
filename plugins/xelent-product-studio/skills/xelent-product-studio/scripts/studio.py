@@ -6,6 +6,7 @@
   studio.py approve-research --dir D --directions ID [ID ...]   record the user's choice of directions
   studio.py check-designs --dir D                  are the product designs grounded, practical and clean?
   studio.py status --dir D                         where the workspace stands and what to do next
+  studio.py set-resolution --dir D 2K|4K           the user's choice: 2K = Nano Banana 2, 4K = GPT Image 2.5 Sunburst
 
 The order is enforced: plan.py refuses to draw anything until the research is approved and the designs pass.
 """
@@ -284,6 +285,25 @@ def gate(D, stage):
 # status
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# resolution: the user's choice decides the model and the price of every image
+# ---------------------------------------------------------------------------
+
+RESOLUTIONS = {"2K": "Nano Banana 2 at 2K", "4K": "GPT Image 2.5 Sunburst at 4K"}
+
+
+def cmd_set_resolution(a):
+    D = os.path.abspath(a.dir)
+    path = os.path.join(D, "studio.json")
+    studio = load(path)
+    if not studio:
+        sys.exit("no studio.json here")
+    studio.setdefault("generation", {})["resolution"] = a.resolution
+    save(path, studio)
+    print(f"Images will be made at {a.resolution} with {RESOLUTIONS[a.resolution]}. "
+          f"Before each stage, `node run.mjs --dir <workspace> --quote` shows its cost.")
+
+
 def cmd_status(a):
     D = os.path.abspath(a.dir)
     studio = load(os.path.join(D, "studio.json"))
@@ -295,6 +315,8 @@ def cmd_status(a):
              f"Marketplaces: {', '.join(m for m, c in studio['marketplaces'].items() if c.get('enabled'))}",
              f"Research: {'approved (' + ', '.join(st['research'].get('directions', [])) + ')' if st['research'].get('approved') else 'checked, waiting for approval' if st['research'].get('checked') else 'not done'}",
              f"Designs: {len(studio.get('products', []))} ({'checked' if st.get('designs', {}).get('checked') else 'not checked'})"]
+    res = (studio.get("generation") or {}).get("resolution")
+    lines.append(f"Resolution: {res + ' (' + RESOLUTIONS[res] + ')' if res in RESOLUTIONS else 'not chosen yet (ask the user: 2K or 4K)'}")
     if approvals:
         counts = {}
         for s in approvals.values():
@@ -317,6 +339,8 @@ def main():
     p = sub.add_parser("approve-research"); p.add_argument("--dir", required=True); p.add_argument("--directions", nargs="+", required=True); p.set_defaults(fn=cmd_approve_research)
     p = sub.add_parser("check-designs"); p.add_argument("--dir", required=True); p.set_defaults(fn=cmd_check_designs)
     p = sub.add_parser("status"); p.add_argument("--dir", required=True); p.set_defaults(fn=cmd_status)
+    p = sub.add_parser("set-resolution"); p.add_argument("--dir", required=True); p.add_argument("resolution", choices=list(RESOLUTIONS))
+    p.set_defaults(fn=cmd_set_resolution)
     a = ap.parse_args()
     a.fn(a)
 
