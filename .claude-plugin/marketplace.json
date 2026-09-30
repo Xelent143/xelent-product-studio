@@ -1,0 +1,21 @@
+{
+  "name": "xelent-product-studio",
+  "owner": {
+    "name": "Xelent API",
+    "email": "support@xelentapi.com"
+  },
+  "metadata": {
+    "description": "Research-led apparel design, consistent product photography and Etsy / Alibaba listings, powered by Xelent API.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "xelent-product-studio",
+      "source": "./plugins/xelent-product-studio",
+      "description": "Research an apparel segment, design trending products, generate consistent photorealistic product photos with Xelent API, and submit Etsy and Alibaba listings as drafts.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": ["apparel", "product-photography", "etsy", "alibaba", "listings", "teamwear", "streetwear", "xelent"]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "xelent-product-studio",
+  "version": "1.0.0",
+  "description": "Research an apparel segment, design trending products, generate consistent photorealistic product photos with Xelent API, and submit Etsy and Alibaba listings as drafts.",
+  "author": {
+    "name": "Xelent API",
+    "email": "support@xelentapi.com",
+    "url": "https://xelentapi.com"
+  },
+  "homepage": "https://github.com/Xelent143/xelent-product-studio",
+  "repository": "https://github.com/Xelent143/xelent-product-studio",
+  "license": "MIT",
+  "keywords": ["apparel", "sportswear", "teamwear", "streetwear", "product-photography", "etsy", "alibaba", "xelent-api"]
+}
