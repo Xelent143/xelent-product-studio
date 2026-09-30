@@ -1,7 +1,8 @@
 # Xelent Product Studio
 
-A Claude skill that takes an apparel business from **industry research** to **approved product designs**,
-**consistent photorealistic product photographs** and **Etsy / Alibaba.com listings submitted as drafts**.
+Claude skills that take an apparel business from **industry research** to **approved product designs**,
+**consistent photorealistic product photographs**, **product videos** and **Etsy / Alibaba.com listings submitted
+as drafts**.
 Built for sportswear, teamwear, streetwear, activewear, combat-sports gear, outerwear and garments in general.
 
 It runs on [Xelent API](https://xelentapi.com) and only on Xelent API: every image and every listing goes through
@@ -25,6 +26,24 @@ your Xelent account.
    writes Alibaba's bulk-upload spreadsheet instead.
 
 Every stage has a gate: research approval, sheet approval, listing approval, and an explicit go-ahead to submit.
+
+### Product videos (the `xelent-product-video` skill)
+
+Give Claude your product photos (all the views you have) and it makes a finished video of exactly the length,
+shape and resolution you ask for, on an AI model or your own model:
+
+- **13 video styles:** 360° turn, runway walk, lookbook poses, street style, sport in action, detail close-ups, hero
+  reveal, performance test, UGC try-on, team walk-out, flat lay to worn, made in our factory, colourway parade.
+- **11 looks:** clean studio, fashion editorial, golden hour, urban street, stadium floodlights, gym grit, luxury
+  dark, neon night, outdoors, phone camera at home, factory floor.
+- **Any length from 5 to 60 seconds**, vertical for Reels, TikTok and Shorts or horizontal for Etsy, Alibaba and
+  websites, at 768p or 1080p.
+
+You approve a still of the model wearing your product and the first frame of every shot before any video is made
+(stills cost a few credits, video costs more). Claude then animates each shot with MiniMax H3, checks every clip
+frame by frame, and edits them into one MP4 with a poster frame. It tells you the cost before each step and the
+credits left after. Video is priced per second:
+[xelentapi.com/pricing](https://xelentapi.com/pricing).
 
 **Example** (one original teamwear design, generated with this skill): the approved concept sheet, then every
 photograph drawn from it: four studio views, a detail close-up, a flat lay, a lifestyle shot and a second colourway.
@@ -110,6 +129,11 @@ plugins/xelent-product-studio/skills/xelent-product-studio/
   references/         research playbook, design language, image direction, Alibaba and Etsy listing guides,
                       IP rules, studio.json schema, Xelent API
   evals/evals.json    test prompts
+plugins/xelent-product-studio/skills/xelent-product-video/
+  SKILL.md            questions, stills, clips, checks and the final edit
+  scripts/            video.py (brief, plan, prompts, strips, edit) render.mjs (runs jobs, quotes, credits)
+                      xelent.mjs (the same API client)
+  references/         styles.json (styles and shots) looks.json styles-guide.md brief.template.json
 ```
 
 ## License
