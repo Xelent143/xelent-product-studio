@@ -45,6 +45,15 @@ Or copy `plugins/xelent-product-studio/skills/xelent-product-studio` into `~/.cl
 
 Requirements: Node.js 18+, Python 3 with Pillow and openpyxl (`python3 -m pip install pillow openpyxl`).
 
+### Claude Code on the web (claude.ai/code)
+
+Cloud sessions do not load installed plugins. Start from the starter repository instead:
+[Xelent143/xelent-product-studio-starter](https://github.com/Xelent143/xelent-product-studio-starter) >
+**Use this template**. It has the skill in `.claude/skills/` and explains the two environment settings it needs
+(network access **Full**, and `XELENT_API_KEY`). In a cloud session the skill shows images as links, saves progress
+to the repository after every step, and `run.mjs --restore` downloads images already paid for again, free, if the
+cloud machine was reset. Guide: [xelentapi.com/help/claude-code-web](https://xelentapi.com/help/claude-code-web).
+
 ## Set up Xelent API
 
 1. Create an account at [xelentapi.com](https://xelentapi.com), add credits (one credit is one rupee) and create an API

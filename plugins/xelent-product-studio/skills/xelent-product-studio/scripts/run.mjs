@@ -5,10 +5,13 @@
 //   node run.mjs --dir D --quote       what this stage will cost and the balance after; generates nothing
 //   node run.mjs --dir D               generate, then report the credits used and the balance left
 //   node run.mjs --dir D --status      progress only
+//   node run.mjs --dir D --restore     download again (free) every image already made whose file is missing
 //   options: --concurrency 6   --resolution 2K|4K (overrides studio.json for this run)
 // A job is done when its output file exists. Every generation id is written to <dir>/ledger.json before anything
-// else, so a re-run polls generations already submitted instead of paying for them again. References go up as
-// 1600px JPEG copies (<dir>/refs): full-size PNGs are several MB and time out on a slow uplink.
+// else, so a re-run polls generations already submitted instead of paying for them again, and an image that was
+// made but whose file is gone (a cloud session's machine was reset) is downloaded again from the link Xelent keeps
+// for 7 days instead of being made twice. References go up as 1600px JPEG copies (<dir>/refs): full-size PNGs are
+// several MB and time out on a slow uplink.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync, statSync } from "node:fs";
 import { dirname, join, resolve, basename } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -29,7 +32,7 @@ if (chosen && !PROFILES[chosen]) {
   console.error(`Resolution must be 2K or 4K, not "${chosen}".`);
   process.exit(4);
 }
-if (!argv.includes("--status") && !PROFILES[chosen]) {
+if (!argv.includes("--status") && !argv.includes("--restore") && !PROFILES[chosen]) {
   console.error(
     "No resolution chosen yet. Ask the user: 2K (Nano Banana 2) or 4K (GPT Image 2.5 Sunburst)? " +
       "Show them each price with `node xelent.mjs prices`, then record the answer: python3 studio.py set-resolution --dir <workspace> 2K|4K",
@@ -42,10 +45,11 @@ const SIZE = PROFILE.imageSize;
 const CONC = +arg("--concurrency", "6");
 const MAX_TRIES = 4, MAX_NET = 8, STALE_MIN = 20, POLL_MS = 8000;
 
-const JOBS = JSON.parse(readFileSync(join(D, "jobs.json"), "utf8"));
+const JOBS = existsSync(join(D, "jobs.json")) ? JSON.parse(readFileSync(join(D, "jobs.json"), "utf8")) : [];
 const LEDGER = join(D, "ledger.json");
 const ledger = existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, "utf8")) : {};
-for (const j of JOBS) ledger[j.name] ??= { attempts: [] };
+// Each entry remembers where its image goes, so --restore can bring back images from earlier stages too.
+for (const j of JOBS) { ledger[j.name] ??= { attempts: [] }; ledger[j.name].out = j.out; }
 const save = () => { writeFileSync(LEDGER + ".tmp", JSON.stringify(ledger, null, 1)); renameSync(LEDGER + ".tmp", LEDGER); };
 const log = (...a) => console.log(new Date().toTimeString().slice(0, 8), ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -105,6 +109,16 @@ async function submit(j) {
   save();
 }
 
+class Expired extends Error {}
+async function download(url, out) {
+  const img = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+  if (img.status === 404 || img.status === 410) throw new Expired("file no longer on Xelent");
+  if (!img.ok) throw new Error("download HTTP " + img.status);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out + ".part", Buffer.from(await img.arrayBuffer()));
+  renameSync(out + ".part", out);
+}
+
 async function poll(j) {
   const a = last(j);
   try {
@@ -112,11 +126,7 @@ async function poll(j) {
     if (r.status === "succeeded") {
       const url = r.results?.[0]?.url;
       if (!url) throw new Error("succeeded without a result url");
-      const img = await fetch(url, { signal: AbortSignal.timeout(180_000) });
-      if (!img.ok) throw new Error("download HTTP " + img.status);
-      mkdirSync(dirname(j.out), { recursive: true });
-      writeFileSync(j.out + ".part", Buffer.from(await img.arrayBuffer()));
-      renameSync(j.out + ".part", j.out);
+      await download(url, j.out);
       a.status = "succeeded"; a.url = url; a.credits = r.credits_used; a.doneAt = new Date().toISOString(); log("done", j.name);
     } else if (r.status === "failed" || r.status === "violation") {
       a.status = r.status; a.reason = r.error || "unknown"; log(r.status.toUpperCase(), j.name, a.reason);
@@ -128,6 +138,53 @@ async function poll(j) {
 }
 
 async function pool(items, n, fn) { const q = [...items]; await Promise.all(Array.from({ length: Math.min(n, q.length) }, async () => { while (q.length) await fn(q.shift()); })); }
+
+// --restore: after a cloud machine was wiped, bring back every image this workspace already paid for.
+if (argv.includes("--restore")) {
+  const missing = Object.entries(ledger)
+    .map(([name, e]) => ({ name, out: e.out, a: e.attempts.filter((x) => x.status === "succeeded" && x.url).at(-1) }))
+    .filter((x) => x.out && x.a && !existsSync(x.out));
+  const counts = { restored: 0, expired: 0, failed: 0 };
+  await pool(missing, 6, async (x) => {
+    for (let attempt = 1; ; attempt++) {
+      try { await download(x.a.url, x.out); counts.restored++; return; }
+      catch (e) {
+        if (e instanceof Expired) { counts.expired++; log("no longer on Xelent (older than 7 days):", x.name); return; }
+        if (attempt >= 3) { counts.failed++; log("could not download:", x.name, e.message); return; }
+        await sleep(3000 * attempt);
+      }
+    }
+  });
+  console.log(`RESTORE: ${counts.restored} image(s) downloaded again for free` +
+    (counts.expired ? `, ${counts.expired} no longer on Xelent (plan and run that stage to make them again)` : "") +
+    (counts.failed ? `, ${counts.failed} failed (run --restore again)` : "") + ".");
+  process.exit(counts.failed ? 5 : 0);
+}
+
+// Images already made and paid for whose files are missing: download them again, free. Only a file Xelent has
+// already deleted (after 7 days) is made again, and that is counted in the price below.
+const paidFor = (j) => { const a = last(j); return !done(j) && a?.status === "succeeded" && a.url ? a : null; };
+const lost = JOBS.filter(paidFor);
+if (lost.length) {
+  log(`${lost.length} image${lost.length === 1 ? " was" : "s were"} already made and paid for but the file is missing; downloading again (free).`);
+  const failed = [];
+  await pool(lost, 6, async (j) => {
+    const a = paidFor(j);
+    for (let attempt = 1; ; attempt++) {
+      try { await download(a.url, j.out); log("downloaded again", j.name); return; }
+      catch (e) {
+        if (e instanceof Expired) { a.status = "expired"; log("no longer on Xelent (older than 7 days); it will be made again", j.name); return; }
+        if (attempt >= 3) { failed.push(j.name); return; }
+        await sleep(3000 * attempt);
+      }
+    }
+  });
+  save();
+  if (failed.length) {
+    console.error(`Could not download ${failed.length} paid image(s) again: ${failed.join(", ")}. Nothing was charged. Check the connection to xelentapi.com and run again.`);
+    process.exit(5);
+  }
+}
 
 // Before paying for anything: the key must be a Xelent API key with enough credits for what is left to do.
 const todo = JOBS.filter((j) => !done(j));

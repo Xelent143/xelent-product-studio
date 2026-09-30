@@ -126,3 +126,7 @@ for b in range(0, len(made), per):
     board.save(name, quality=85); boards.append(name)
 print(f"{len(made)} {a.stage} on {len(boards)} boards:"); print("\n".join(boards))
 for s in suspects: print("CHECK:", s)
+if os.environ.get("CLAUDE_CODE_REMOTE") == "true":
+    which = "--stage sheets" if a.stage == "sheets" else "--stage views, then --stage extras"
+    print(f"CLOUD SESSION: the user cannot open files on this machine. Give them the image links "
+          f"(studio.py links --dir {D} {which}) and push the review/*.jpg boards to their GitHub branch.")

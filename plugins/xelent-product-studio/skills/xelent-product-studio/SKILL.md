@@ -181,6 +181,23 @@ to submit directly instead, the user connects Alibaba (their own Alibaba app's k
 xelentapi.com/dashboard/marketplaces. Report each listing's result and
 link; never activate or publish a listing live.
 
+## Cloud sessions (Claude Code on the web)
+
+When `CLAUDE_CODE_REMOTE` is `true`, you are on a cloud machine the user cannot see. The workflow is the same, with
+these differences ([references/cloud.md](references/cloud.md) has the details):
+- **Key:** read from the `XELENT_API_KEY` environment variable (set in the cloud environment's settings). Never ask
+  the user to paste it into the chat.
+- **No connection to xelentapi.com** (network errors, 403 from a proxy): ask the user to set the environment's
+  network access to **Full** (claude.ai/code > environment settings), then continue.
+- **Showing images:** the user cannot open `review/*.html`. After `board.py`, give them the links from
+  `python3 <skill>/scripts/studio.py links --dir <workspace> --stage sheets` (or `views`, `extras`), one numbered
+  line per product, and push the `review/*.jpg` boards to their branch so GitHub shows them.
+- **Save progress:** the machine is wiped some time after the session goes idle, e.g. while the user reviews. After
+  every stage and every approval, commit and push the workspace (the repository's `.gitignore` keeps the large
+  PNGs out). If images are missing later (a new machine), run `node <skill>/scripts/run.mjs --dir <workspace>
+  --restore` first: every image already paid for comes back free from Xelent for 7 days.
+- **Long runs:** start `run.mjs` in the background and check `run.mjs --status`; a re-run continues where it stopped.
+
 ## Keeping the user informed
 
 `python3 <skill>/scripts/studio.py status --dir <workspace>` summarises where things stand. For questions about

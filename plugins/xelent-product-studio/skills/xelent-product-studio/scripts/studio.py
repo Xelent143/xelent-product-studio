@@ -7,6 +7,7 @@
   studio.py check-designs --dir D                  are the product designs grounded, practical and clean?
   studio.py status --dir D                         where the workspace stands and what to do next
   studio.py set-resolution --dir D 2K|4K           the user's choice: 2K = Nano Banana 2, 4K = GPT Image 2.5 Sunburst
+  studio.py links --dir D [--stage sheets|views|extras] [--only ID ...]   web links to the images (kept 7 days)
 
 The order is enforced: plan.py refuses to draw anything until the research is approved and the designs pass.
 """
@@ -304,6 +305,45 @@ def cmd_set_resolution(a):
           f"Before each stage, `node run.mjs --dir <workspace> --quote` shows its cost.")
 
 
+# ---------------------------------------------------------------------------
+# links: the images as web links, for a user who cannot open files on this machine (a cloud session)
+# ---------------------------------------------------------------------------
+
+STAGE_PREFIX = {"sheets": "sheet-", "views": "view-", "extras": "extra-"}
+
+
+def cmd_links(a):
+    D = os.path.abspath(a.dir)
+    ledger = load(os.path.join(D, "ledger.json"), {})
+    prefix = STAGE_PREFIX.get(a.stage, "")
+    latest = {}
+    for name, entry in ledger.items():
+        if not name.startswith(prefix):
+            continue
+        made = [x for x in entry.get("attempts", []) if x.get("status") == "succeeded" and x.get("url")]
+        if not made:
+            continue
+        # name is <stage>-<product id>-v<version>[-<view>]; keep only each product's newest version
+        m = re.match(r"^(sheet|view|extra)-(.+)-v(\d+)(?:-(.+))?$", name)
+        if not m:
+            continue
+        kind, pid, ver, view = m.group(1), m.group(2), int(m.group(3)), m.group(4) or "sheet"
+        if a.only and pid not in a.only:
+            continue
+        key = (kind, pid, view)
+        if key not in latest or ver >= latest[key][0]:
+            latest[key] = (ver, made[-1]["url"], made[-1].get("doneAt") or made[-1].get("at", ""))
+    if not latest:
+        sys.exit("No finished images recorded for that selection yet.")
+    current = None
+    for (kind, pid, view), (ver, url, at) in sorted(latest.items(), key=lambda kv: (kv[0][1], kv[0][0], kv[0][2])):
+        if pid != current:
+            print(f"\n{pid} (version {ver})")
+            current = pid
+        print(f"  {view}: {url}")
+    print("\nLinks work for 7 days after each image was made.")
+
+
 def cmd_status(a):
     D = os.path.abspath(a.dir)
     studio = load(os.path.join(D, "studio.json"))
@@ -341,6 +381,8 @@ def main():
     p = sub.add_parser("status"); p.add_argument("--dir", required=True); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("set-resolution"); p.add_argument("--dir", required=True); p.add_argument("resolution", choices=list(RESOLUTIONS))
     p.set_defaults(fn=cmd_set_resolution)
+    p = sub.add_parser("links"); p.add_argument("--dir", required=True); p.add_argument("--stage", choices=list(STAGE_PREFIX))
+    p.add_argument("--only", nargs="+"); p.set_defaults(fn=cmd_links)
     a = ap.parse_args()
     a.fn(a)
 
