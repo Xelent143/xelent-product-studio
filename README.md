@@ -54,8 +54,13 @@ Requirements: Node.js 18+, Python 3 with Pillow and openpyxl (`python3 -m pip in
 3. Connect your stores under **Marketplaces** on the Xelent dashboard:
    - **Etsy**: create an app at [etsy.com/developers](https://www.etsy.com/developers/register) with the callback URL
      shown on the page, then enter its keystring and shared secret.
-   - **Alibaba.com**: requires a Gold Supplier store. If Alibaba is not available for your account, the skill
-     produces the bulk-upload spreadsheet instead.
+   - **Alibaba.com**: requires a Gold Supplier store. Create an app on the
+     [Alibaba.com Open Platform](https://openapi.alibaba.com/), add the callback URL shown on the page, and paste
+     its App Key and App Secret (or use the platform's app when it is offered). Without a connection, the skill
+     produces Alibaba's bulk-upload spreadsheet instead.
+4. Every job and every credit is visible under **Job history** and **Credit ledger** in the dashboard (with CSV
+   downloads), and the ledger shows whether it adds up to your balance. Claude can read the same records with
+   `node scripts/xelent.mjs jobs` and `node scripts/xelent.mjs ledger`.
 
 ## Use
 

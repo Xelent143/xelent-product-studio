@@ -31,9 +31,16 @@ refuse any other host, and a key only counts if Xelent API accepts it and answer
 | `POST /v1/listings/validate` | publish.mjs | server-side listing checks |
 | `POST /v1/listings` | publish.mjs | create the Etsy draft or submit to Alibaba review |
 | `GET /v1/listings/:id` | publish.mjs --status | refresh review status |
+| `GET /v1/usage` | xelent.mjs jobs | job history with totals (filters: status, model, key, q, from, to) |
+| `GET /v1/statement` | xelent.mjs ledger | credit ledger: every credit in and out with the balance after, a period summary and `reconciled` |
 
 Failed generations and content-policy refusals are not charged. `run.mjs` stops cleanly when credits run out;
 finished images are kept and a re-run continues.
+
+When a user asks what a run cost, why credits went down, or whether a job was charged, answer from their records,
+not from estimates: `node scripts/xelent.mjs jobs --status failed` (failed jobs show 0 credits) and
+`node scripts/xelent.mjs ledger` (every credit in and out; `summary.reconciled` is true when it adds up to the
+balance). The same views are in the dashboard under Job history and Credit ledger, with CSV downloads.
 
 ## Image hosting
 Listing images are uploaded to the account's **Assets** (xelentapi.com/dashboard/assets). Once a listing using them
@@ -43,6 +50,8 @@ a listing are deleted after 30 days. The user can delete any asset from the dash
 ## Connecting marketplaces (xelentapi.com/dashboard/marketplaces)
 - **Etsy**: each seller creates their own Etsy app at etsy.com/developers (callback URL shown on the page), enters
   its keystring and shared secret, and approves access for their shop. Listings are created as drafts.
-- **Alibaba**: needs a Gold Supplier store. The connection uses Xelent API's Alibaba Open Platform app; if the page
-  says Alibaba is not available for the account, use the spreadsheet export instead. Listings go into Alibaba's review.
+- **Alibaba**: needs a Gold Supplier store. On the same page the seller connects with their own Alibaba Open
+  Platform app (create it at openapi.alibaba.com, add the callback URL shown, paste the App Key and App Secret), or
+  with the platform's app when the Xelent API admin offers it. Everything happens in the dashboard; nobody needs
+  Cloudflare. Listings go into Alibaba's review.
 - Without a connection, Alibaba listings go into the bulk-upload spreadsheet and Etsy listings wait until connected.

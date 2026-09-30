@@ -7,6 +7,8 @@
 //   node xelent.mjs marketplaces                 which marketplaces are connected
 //   node xelent.mjs etsy-reference               Etsy shipping / processing / return / partner ids for listings
 //   node xelent.mjs etsy-taxonomy "hoodies"      search Etsy category ids
+//   node xelent.mjs jobs [--status failed] [--q text] [--from YYYY-MM-DD] [--to YYYY-MM-DD]   job history and totals
+//   node xelent.mjs ledger [--from YYYY-MM-DD] [--to YYYY-MM-DD]   credit ledger: every credit in and out, and whether it adds up
 //
 // Imported by run.mjs and publish.mjs for generation, assets and listings.
 import { readFileSync, writeFileSync, mkdirSync, existsSync, chmodSync } from "node:fs";
@@ -150,7 +152,10 @@ async function cli() {
           api: apiBase(),
           credits: acct.balance_credits,
           held: acct.held_credits,
-          alibaba: m.alibaba?.connection?.status === "connected" ? `connected (${m.alibaba.connection.account})` : m.alibaba?.available ? "not connected" : "not available (use the spreadsheet export)",
+          alibaba:
+            m.alibaba?.connection?.status === "connected"
+              ? `connected (${m.alibaba.connection.account})`
+              : "not connected: connect it at https://xelentapi.com/dashboard/marketplaces (your own Alibaba app, or the platform's if offered); until then listings go to the bulk-upload spreadsheet",
           etsy: m.etsy?.connection?.status === "connected" ? `connected (${m.etsy.connection.account})` : "not connected",
         },
         null,
@@ -160,9 +165,22 @@ async function cli() {
     return;
   }
   if (cmd === "marketplaces") return console.log(JSON.stringify(await marketplaces(), null, 1));
+  if (cmd === "jobs" || cmd === "ledger") {
+    const q = new URLSearchParams();
+    for (const f of ["status", "q", "from", "to", "model", "key"]) if (arg(`--${f}`)) q.set(f, arg(`--${f}`));
+    q.set("limit", arg("--limit") ?? "20");
+    if (cmd === "jobs") {
+      const r = await xelent(`/v1/usage?${q}`);
+      console.log(JSON.stringify({ totals: r.totals, jobs: r.data.map((j) => ({ id: j.id, when: new Date(j.created_at * 1000).toISOString(), model: j.model, status: j.status, credits: j.credits_used, error: j.error_code ?? undefined, prompt: j.prompt.slice(0, 80) })) }, null, 1));
+    } else {
+      const r = await xelent(`/v1/statement?${q}`);
+      console.log(JSON.stringify({ summary: r.summary, entries: r.data.map((e) => ({ when: new Date(e.at * 1000).toISOString(), what: e.description, ref: e.ref, credits: e.credits, balance_after: e.balance_after })) }, null, 1));
+    }
+    return;
+  }
   if (cmd === "etsy-reference") return console.log(JSON.stringify(await xelent("/v1/marketplaces/etsy/reference"), null, 1));
   if (cmd === "etsy-taxonomy") return console.log(JSON.stringify(await xelent(`/v1/marketplaces/etsy/taxonomy?q=${encodeURIComponent(rest.join(" "))}`), null, 1));
-  console.log(readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 11).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
+  console.log(readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 13).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

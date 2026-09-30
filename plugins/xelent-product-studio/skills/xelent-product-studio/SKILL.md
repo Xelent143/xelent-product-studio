@@ -152,12 +152,15 @@ node <skill>/scripts/publish.mjs --dir <workspace> --status   # later: Alibaba r
 ```
 
 Images are hosted in the user's Xelent dashboard (Assets) and deleted 7 days after the listing is submitted.
-If Alibaba is not connected, `--submit` writes `export/alibaba-bulk-upload.xlsx` for Seller Centre > Bulk upload.
-If Etsy is not connected, send the user to xelentapi.com/dashboard/marketplaces. Report each listing's result and
+If Alibaba is not connected, `--submit` writes `export/alibaba-bulk-upload.xlsx` for Seller Centre > Bulk upload;
+to submit directly instead, the user connects Alibaba (their own Alibaba app's key and secret) and Etsy on
+xelentapi.com/dashboard/marketplaces. Report each listing's result and
 link; never activate or publish a listing live.
 
 ## Keeping the user informed
 
-`python3 <skill>/scripts/studio.py status --dir <workspace>` summarises where things stand. On long runs,
+`python3 <skill>/scripts/studio.py status --dir <workspace>` summarises where things stand. For questions about
+cost or charges, use the user's own records: `node <skill>/scripts/xelent.mjs jobs` and `xelent.mjs ledger`
+(details in references/xelent-api.md). On long runs,
 `node <skill>/scripts/run.mjs --dir <workspace> --status` counts finished images; give a status line every few
 minutes. `run.mjs` keeps a ledger, so a re-run after a crash never pays twice.

@@ -101,9 +101,9 @@ text, border, watermark or collage. See [image-direction.md](image-direction.md)
 - **Not connected**: `publish.mjs --submit` (or `--upload-only` then `alibaba_xlsx.py`) writes
   `export/alibaba-bulk-upload.xlsx` in Alibaba's default bulk template with hosted image links. The user uploads it in
   seller centre (Products > Bulk upload). Links for images not yet used in a listing stay up for 30 days.
-- Alibaba's API access requires a Gold Supplier store and an Open Platform app. On Xelent API the Alibaba
-  connection uses the platform owner's app; ask the Xelent API admin if the Marketplaces page says Alibaba is
-  not available for the account.
+- Alibaba's API access requires a Gold Supplier store and an Alibaba Open Platform app. The seller connects on
+  xelentapi.com/dashboard/marketplaces with their own app's App Key and App Secret (or the platform's app, when
+  offered). No server or Cloudflare access is involved.
 
 ## Common rejections and fixes
 - Title or keywords contain a brand, league, club or event name: remove it.
