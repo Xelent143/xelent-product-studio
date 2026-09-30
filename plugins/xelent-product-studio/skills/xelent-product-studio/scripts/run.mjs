@@ -119,6 +119,19 @@ if (acct.balance_credits < need) {
   console.error(`Not enough credits: ${need} needed, ${acct.balance_credits} available. Top up at https://xelentapi.com/dashboard/billing or run fewer products (plan.py --only).`);
   process.exit(3);
 }
+// A key can carry its own spending cap, separate from the balance. Check it too, so a stage never stops halfway.
+const cap = acct.key?.spend_limit_credits;
+if (cap !== null && cap !== undefined) {
+  const left = +(cap - (acct.key.spent_credits ?? 0)).toFixed(2);
+  if (left < need) {
+    console.error(
+      `This API key has ${left} of its ${cap}-credit spending limit left, and this stage needs about ${need} credits (${unsubmitted} images at ${price}). ` +
+        `The account balance (${acct.balance_credits} credits) is fine: the limit is on the key. Raise the key's limit to at least ${Math.ceil((acct.key.spent_credits ?? 0) + need)} credits, ` +
+        `or remove it, at https://xelentapi.com/dashboard/keys (edit the key "${acct.key.name}"), then run again. Finished images are kept.`,
+    );
+    process.exit(3);
+  }
+}
 
 let lastLine = 0;
 for (;;) {
