@@ -75,7 +75,7 @@ Each image is one job at the resolution the user chose (`generation.resolution` 
 | Resolution | Model | Credits per image (1 credit = 1 PKR) |
 |---|---|---|
 | 2K | Nano Banana 2 | 4 to 9, depending on the package the credits came from |
-| 4K | GPT Image 2.5 Sunburst (quality high) | the 2K price + 1 |
+| 4K | GPT Image 2.5 Sunburst (quality high) | 8 to 18, twice the 2K price |
 
 The exact price on the user's account: `node scripts/xelent.mjs prices`. A product with 4 views, all extras and
 3 colourways is about 1 sheet + 4 views + 3 extras + 2 colourways = 10 images, plus revisions.

@@ -14,7 +14,7 @@ refuse any other host, and a key only counts if Xelent API accepts it and answer
 ## Setup (once per machine)
 1. The user creates an account and an API key at https://xelentapi.com/dashboard/keys and adds credits
    (Billing page; one credit is one rupee; a 2K image (Nano Banana 2) uses 4 to 9 credits depending on the package,
-   a 4K image (GPT Image 2.5 Sunburst) one credit more).
+   a 4K image (GPT Image 2.5 Sunburst) twice that: 8 to 18).
 2. Save the key: `node scripts/xelent.mjs login --key sk-...` (the user can paste it into the terminal
    themselves, or set `XELENT_API_KEY` in their environment).
 3. Check: `node scripts/xelent.mjs check` prints credits and which marketplaces are connected.

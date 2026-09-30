@@ -77,7 +77,7 @@ Claude asks once which resolution you want:
 | Resolution | Model | Credits (rupees) per image |
 |---|---|---|
 | 2K | Nano Banana 2 | 4 to 9, depending on the package your credits came from |
-| 4K | GPT Image 2.5 Sunburst | the 2K price + 1 |
+| 4K | GPT Image 2.5 Sunburst | 8 to 18, twice the 2K price |
 
 A product with four views, three extras and two extra colourways is about 10 images, plus any revisions. Before
 each generation stage Claude tells you how many images it will make, the credits it will use and what your balance
