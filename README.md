@@ -38,6 +38,9 @@ shape and resolution you ask for, on an AI model, your own model or your own man
   dark, neon night, outdoors, phone camera at home, factory floor.
 - **Any length from 5 to 60 seconds**, vertical for Reels, TikTok and Shorts or horizontal for Etsy, Alibaba and
   websites, at 768p or 1080p.
+- **10 quick presets** that set all of that in one choice: mannequin 360° listing video, mannequin 360° Reel, model
+  360° listing video, street-style Reel, night drop Reel, UGC try-on ad, sport in action Reel, launch hero, quality
+  close-ups for wholesale, factory story for Alibaba.
 
 You approve a still of the model wearing your product and the first frame of every shot before any video is made
 (stills cost a few credits, video costs more). Claude then animates each shot with MiniMax H3, checks every clip
@@ -133,7 +136,7 @@ plugins/xelent-product-studio/skills/xelent-product-video/
   SKILL.md            questions, stills, clips, checks and the final edit
   scripts/            video.py (brief, plan, prompts, strips, edit) render.mjs (runs jobs, quotes, credits)
                       xelent.mjs (the same API client)
-  references/         styles.json (styles and shots) looks.json styles-guide.md brief.template.json
+  references/         presets.json styles.json (styles and shots) looks.json styles-guide.md brief.template.json
 ```
 
 ## License
