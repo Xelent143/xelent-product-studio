@@ -13,7 +13,7 @@ refuse any other host, and a key only counts if Xelent API accepts it and answer
 
 ## Setup (once per machine)
 1. The user creates an account and an API key at https://xelentapi.com/dashboard/keys and adds credits
-   (Billing page; 1 credit = 1 Nano Banana 2 image).
+   (Billing page; one credit is one rupee, and a Nano Banana 2 image uses 4 to 9 credits depending on the package).
 2. Save the key: `node scripts/xelent.mjs login --key sk-...` (the user can paste it into the terminal
    themselves, or set `XELENT_API_KEY` in their environment).
 3. Check: `node scripts/xelent.mjs check` prints credits and which marketplaces are connected.

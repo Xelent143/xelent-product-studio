@@ -70,5 +70,8 @@ exactly (colours, panels, logos, fit) and nothing else in the scene carries a br
   if it still happens, add the facing direction to that view's `view_details`.
 
 ## Cost
-One Nano Banana 2 image at 2K is 1 Xelent credit. A product with 4 views and all extras and 3 colourways is about
-1 sheet + 4 views + 3 extras + 2 colourways = 10 credits, plus revisions. Tell the user the count before each stage.
+Each image is one Nano Banana 2 job at 2K. On Xelent API one credit is one rupee, and a Nano Banana 2 image uses
+4 to 9 credits depending on the package the user's credits came from; `run.mjs` reads the account's current price
+from Xelent API and checks the balance before it starts. A product with 4 views, all extras and 3 colourways is about
+1 sheet + 4 views + 3 extras + 2 colourways = 10 images, plus revisions. Tell the user the image count and the
+credits (`run.mjs` prints both) before each stage.

@@ -47,7 +47,7 @@ Requirements: Node.js 18+, Python 3 with Pillow and openpyxl (`python3 -m pip in
 
 ## Set up Xelent API
 
-1. Create an account at [xelentapi.com](https://xelentapi.com), add credits (1 credit = 1 image) and create an API
+1. Create an account at [xelentapi.com](https://xelentapi.com), add credits (one credit is one rupee) and create an API
    key under **API keys**.
 2. Ask Claude to set up the product studio; it saves the key with
    `node scripts/xelent.mjs login --key sk-...` (stored in `~/.config/xelent/credentials`, readable only by you).
@@ -72,8 +72,9 @@ Ask Claude in plain words, for example:
 
 ## Cost
 
-About 1 credit per image: a product with four views, three extras and two extra colourways is roughly 10 credits
-plus any revisions. Claude tells you the count before each generation stage.
+Every image is one Nano Banana 2 job, which uses 4 to 9 credits (rupees) depending on the package your credits
+came from. A product with four views, three extras and two extra colourways is about 10 images, plus any revisions.
+Claude tells you the image count and the credits before each generation stage.
 
 ## Notes on marketplace rules
 
