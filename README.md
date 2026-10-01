@@ -32,14 +32,16 @@ Every stage has a gate: research approval, sheet approval, listing approval, and
 Give Claude your product photos (all the views you have) and it makes a finished video of exactly the length,
 shape and resolution you ask for, on an AI model, your own model or your own mannequin photo:
 
-- **14 video styles:** 360° turn, mannequin 360° (your mannequin photo turning in its own setting), runway walk, lookbook poses, street style, sport in action, detail close-ups, hero
+- **20 video styles:** 360° turn, mannequin 360° (your mannequin photo turning in its own setting), six flat-lay
+  videos (handheld walk-around, hands-on showcase, unfold reveal, unboxing, light sweep, packed for shipment), runway walk, lookbook poses, street style, sport in action, detail close-ups, hero
   reveal, performance test, UGC try-on, team walk-out, flat lay to worn, made in our factory, colourway parade.
 - **12 looks:** same as my photo, clean studio, fashion editorial, golden hour, urban street, stadium floodlights, gym grit, luxury
   dark, neon night, outdoors, phone camera at home, factory floor.
 - **Any length from 5 to 60 seconds**, vertical for Reels, TikTok and Shorts or horizontal for Etsy, Alibaba and
   websites, at 768p or 1080p.
-- **10 quick presets** that set all of that in one choice: mannequin 360° listing video, mannequin 360° Reel, model
-  360° listing video, street-style Reel, night drop Reel, UGC try-on ad, sport in action Reel, launch hero, quality
+- **17 quick presets** that set all of that in one choice: mannequin 360° listing video, mannequin 360° Reel,
+  hands-on flat lay Reel, flat lay walk-around Reel, flat lay listing video, unfold reveal Reel, unboxing ad, light
+  sweep hero, packed for shipment (B2B), model 360° listing video, street-style Reel, night drop Reel, UGC try-on ad, sport in action Reel, launch hero, quality
   close-ups for wholesale, factory story for Alibaba.
 
 You approve a still of the model wearing your product and the first frame of every shot before any video is made
